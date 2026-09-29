@@ -12,8 +12,17 @@ set -a
 . ./ex00/.env
 set +a
 
+# Evita que el comodín quede como texto literal cuando no hay coincidencias.
+shopt -s nullglob
+csv_files=(subject/customer/*.csv)
+
+if (( ${#csv_files[@]} == 0 )); then
+    echo "Error: no hay archivos CSV en subject/customer/" >&2
+    exit 1
+fi
+
 # Recorre todos los CSV de customer.
-for csv_file in subject/customer/*.csv; do
+for csv_file in "${csv_files[@]}"; do
     # Usa el nombre del CSV, sin extensión, como nombre de tabla.
     table_name=$(basename "$csv_file" .csv)
     echo "Importando $table_name"

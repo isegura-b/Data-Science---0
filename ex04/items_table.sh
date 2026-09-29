@@ -13,6 +13,13 @@ set -a
 . ./ex00/.env
 set +a
 
+csv_file="subject/item/item.csv"
+
+if [ ! -f "$csv_file" ]; then
+    echo "Error: no se encuentra $csv_file" >&2
+    exit 1
+fi
+
 # Recrea la tabla items.
 docker compose -f ex00/docker-compose.yml exec -T postgres \
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" < ex04/items_table.sql
@@ -21,4 +28,4 @@ docker compose -f ex00/docker-compose.yml exec -T postgres \
 docker compose -f ex00/docker-compose.yml exec -T postgres \
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
     -c "\copy items FROM STDIN WITH (FORMAT csv, HEADER true)" \
-    < subject/item/item.csv
+    < "$csv_file"

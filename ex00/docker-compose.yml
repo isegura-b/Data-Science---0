@@ -1,6 +1,7 @@
 services:
   postgres:
-    image: postgres:16
+    # Construye PostgreSQL desde nuestro Dockerfile.
+    build: ./postgres
     container_name: piscineds_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -10,20 +11,30 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ../subject/customer:/data/customer:ro # Datos accesibles en solo lectura.
+      - ../subject/item:/data/item:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
   pgadmin:
-    image: dpage/pgadmin4
+    # Construye pgAdmin y espera a que PostgreSQL esté preparado.
+    build: ./pgadmin
     container_name: piscineds_pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
     ports:
-      - "5050:80"
+      - "5050:5050"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
